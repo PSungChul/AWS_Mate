@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인</title>
+    <link rel="stylesheet" type="text/css" href="/css/login.css">
+    <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-neo.css" rel="stylesheet">
+    <!-- 아이디 및 비밀번호가 틀릴 경우 에러 알림창이 등장 -->
+    <script th:inline="javascript">
+        // 컨트롤러에서 모델로 바인딩한 에러 체크값
+        let error = [[${error}]];
+        // 컨트롤러에서 모델로 바인딩한 에러 메세지
+        let errorMsg = [[${errorMsg}]];
+        // 컨트롤러에서 모델로 바인딩한 소셜 로그인 에러 메세지
+        let loginErrMsg = [[${loginErrMsg}]];
+
+        // 에러 체크값이 true일 경우 에러 알림창 등장
+        if ( error == "true" ) {
+            alert(errorMsg);
+        }
+
+        // 소셜 로그인 에러 메세지가 null이 아닌 경우 에러 알림창 등장
+        if ( loginErrMsg != null ) {
+            alert(loginErrMsg);
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="mainLogo">
+            <a href="/" alt="SOJU">
+                <img src="/img/logo_mate.png" class="mainLogoImg">
+            </a>
+        </div>
+
+        <div class="loginForm">
+            <!-- Spring Security를 사용하기 위해선 반드시 method는 POST를 사용해야 한다. -->
+            <form action="/loginform/login" method="post">
+                <div>
+                    <p class="toEmail">이메일 로그인</p>
+                </div>
+
+                <div class="emailLoginForm">
+                    <div class="inputLoginBox">
+                        <div class="inputLogin">
+                            <!-- name은 하나라도 빠짐없이 다 작성해야하며, 각 name명은 시큐리티에서 잡고있는 아이디 비빌번호 변수명과 반드시 일치해야 한다. -->
+                            <input name="emailId" class="loginInput" type="text" placeholder="이메일 주소">
+                            <input name="pwd" class="loginInput" type="password" placeholder="비밀번호">
+                        </div>
+                        <input class="btnLogin" type="submit" value="로그인">
+                    </div>
+
+                    <div class="statusLogin">
+                        <!-- 직접 로그아웃 하기전까지 로그인을 유지시켜주는 체크박스 -->
+                        <input name="remember-me" class="remember" type="checkbox"><label>로그인 상태 유지하기 </label>
+                    </div>
+
+                    <!-- 아이디 및 비밀번호가 틀릴 경우 에러 메세지가 등장하는 구역 -->
+                    <div th:if="${error}" class="error">
+                        <p th:text="${errorMsg}"></p>
+                    </div>
+                </div>
+            </form>
+
+            <div class="findAndJoin">
+                <a name="aFindId" class="aLink" href="/loginform/findidform">아이디 찾기</a>
+                <label> | </label>
+                <a name="aFindPwd" class="aLink" href="/loginform/findpwdform">비밀번호 찾기</a>
+                <label> | </label>
+                <a name="aJoin" class="aLink" href="/joinform">회원가입하기</a>
+            </div>
+
+            <div class="divOr">
+                <hr />
+                OR
+                <hr />
+            </div>
+
+            <div class="socialLogin">
+                <p class="toSocial">간편 로그인</p>
+                <div class="btnSocial">
+                    <!-- 네이버 로그인 -->
+                    <div class="naver btnSocial" id="naverIdLogin"></div>
+                    <!-- 구글 로그인 -->
+                    <!-- 3. MainController에서 미리 만들어서 바인딩한 구글 로그인 URL을 가져와 사용한다. -->
+                    <a th:href="${googleUrl}" class="google btnSocial">
+                        <img src="/img/btn_google.png" style="height:45px;width:233px">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+<!----------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+    <!-- 네이버 로그인 API -->
+    <script src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js" charset="utf-8"></script>
+    <script th:inline="javascript">
+        // 네이버 로그인 정보
+        const naverLogin = new naver.LoginWithNaverId(
+            {
+                clientId: [[${naverClientId}]], // 네이버에서 발급받은 API 사용 ID
+                callbackUrl: "http://localhost:8888/loginform/navercallback", // 로그인을 하고 정보동의 후 이동할 페이지 - 네이버에서 미리 등록해야한다.
+                loginButton: {color: "green", type: 3, height: 40}, // 위에 작성한 <div>태그에 만들어줄 로그인 버튼 모양 설정
+                isPopup: false, // callbackUrl을 팝업창으로 열건지 선택 - true : 팝업 / false : 다음 페이지
+                callbackHandle: true // 콜백메소드에 핸들메소드 사용여부
+            }
+        );
+        // 로그인 정보동의 시작
+        naverLogin.init();
+    </script>
+</body>
+</html>

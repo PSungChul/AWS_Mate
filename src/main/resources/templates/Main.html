@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>MATE</title>
+    <link rel="stylesheet" type="text/css" href="/css/header.css">
+    <link rel="stylesheet" type="text/css" href="/css/footer.css">
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-neo.css" rel="stylesheet">
+    <script src="/js/httpRequest.js"></script>
+    <script src="/js/mainAlarm.js"></script>
+</head>
+<body>
+    <header>
+        <nav class="headerContainer">
+            <div class="headerMenu">
+                <div class="headerMenuLeft">
+
+                    <div class="headerImg">
+                        <a href="/" alt="SOJU">
+                            <img src="/img/logo_mate.png" class="mainLogo">
+                        </a>
+                    </div>
+
+                    <div class="menuContainer">
+                        <div class="categoryMenu">
+                            <span>스터디원</span>
+                            <div class="dropTable">
+                                <a class="dropRecruitStudy dropMenu" href="/recruitstudy">스터디원 모집</a>
+                                <a class="dropRecruitMentee dropMenu" href="/recruitmenteelist">멘티 모집</a>
+                                <a class="dropRecruitMentor dropMenu" href="/recruitmentorlist">멘토 모집</a>
+                            </div>
+                        </div>
+
+                        <div class="categoryMenu">
+                            <a href="/meta">
+                                <span>스터디룸</span>
+                            </a>
+                        </div>
+                        <div class="categoryMenu">
+                            <a href="/store">
+                                <span>스토어</span>
+                            </a>
+                        </div>
+                        <div class="categoryMenu">
+                            <a href="/mypage">
+                                <span>마이페이지</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="headerMenuRight">
+                    <div class="welcome" sec:authorize="isAnonymous()">로그인이 필요합니다!!</div>
+                    <div class="whenLogin" sec:authorize="isAuthenticated()">
+                        <div class="welcome" th:text="${nickname} + '님 반갑습니다!'"></div>
+                        <div class="notificationsMenu">
+                            <div class="icon">
+                                <i class="ri-notification-4-fill"></i>
+                            </div>
+                            <div class="notiDrop">
+                                <p>최근 알림</p>
+                                <div class="notiList">
+                                    <a class="notiDropMenu" th:each="alarm : ${alarmList}">
+                                        <div th:if="${alarm.alarmType} == '2'">
+                                            <form>
+                                                <span class="notiCircle"></span>
+                                                <span class="notiText" th:text="${alarm.title}"></span><br>
+                                                <input type="hidden" name="idx" th:value="${alarm.idx}">
+                                                <input type="hidden" name="recruitStudyIdx" th:value="${alarm.recruitStudyIdx}">
+                                                <input type="hidden" name="recruitMentorIdx" th:value="${alarm.recruitMentorIdx}">
+                                                <input type="hidden" name="recruitMenteeIdx" th:value="${alarm.recruitMenteeIdx}">
+                                                <input type="hidden" name="nickname" th:value="${alarm.nickname}">
+                                                <input type="button" value="수락" onclick="recruitAccept(this.form);">
+                                                <input type="button" value="거절" onclick="recruitRefuse(this.form);">
+                                            </form>
+                                        </div>
+                                        <div th:if="${alarm.alarmType} != '2'">
+                                            <span class="notiCircle"></span>
+                                            <form>
+                                                <input type="hidden" name="idx" th:value="${alarm.idx}">
+                                                <input type="button" value="X" onclick="deleteAlarm(this.form);"><br>
+                                                <span class="notiText" th:text="${alarm.title}"></span>
+                                            </form>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="whenLogin" sec:authorize="isAnonymous()">
+                        <div class="welcome"></div>
+                        <div class="notificationsMenu" onclick="location.href='/mypage/alarm'" style="visibility: hidden;">
+                            <div class="icon" th:data-number="${alarmCount}">
+                                <i class="ri-notification-4-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btnLogin">
+                        <input class="inputButtonLogin" sec:authorize="isAnonymous()" type="button" value="로그인" onclick="location.href='/loginform'">
+                        <input class="inputButtonLogin" sec:authorize="isAuthenticated()" type="button" value="로그아웃" onclick="location.href='/logout'">
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="advertisingDiv">
+        <ul class="slides">
+            <li><img src="/img/ad1.png" style="width: 1210px; height: 500px;" alt="/img/ad11.png"></li>
+            <li><img src="/img/ad2.png" style="width: 1300px; height: 500px;" alt="/img/ad22.png"></li>
+        </ul>
+        <p class="controller">
+            <span class="prev">&lt;</span>
+            <span class="next">&gt;</span>
+        </p>
+    </div>
+
+    <div class="interestContainer">
+        <div class="interestTitle">
+            <span>어느 분야에 관심이 있나요?</span>
+        </div>
+
+        <div class="interestDivBody">
+
+            <div class="interestElement">
+                <a href="/recruitstudy/computer">
+                    <img src="/img/computer.png" class="interestElementImg">
+                    <p class="interestElementText">컴퓨터/IT</p>
+                </a>
+            </div>
+
+            <div class="interestElement">
+                <a href="/recruitstudy/math">
+                    <img src="/img/math.png" class="interestElementImg">
+                    <p class="interestElementText">수학</p>
+                </a>
+            </div>
+
+            <div class="interestElement">
+                <a href="/recruitstudy/management">
+                    <img src="/img/management.png" class="interestElementImg">
+                    <p class="interestElementText">경영/마케팅</p>
+                </a>
+            </div>
+
+            <div class="interestElement">
+                <a href="/recruitstudy/design">
+                    <img src="/img/design.png" class="interestElementImg">
+                    <p class="interestElementText">디자인</p>
+                </a>
+            </div>
+
+            <div class="interestElement">
+                <a href="/recruitstudy/education">
+                    <img src="/img/education.png" class="interestElementImg">
+                    <p class="interestElementText">교육</p>
+                </a>
+            </div>
+
+            <div class="interestElement">
+                <a href="/recruitstudy/literature">
+                    <img src="/img/literature.png" class="interestElementImg">
+                    <p class="interestElementText">문학</p>
+                </a>
+            </div>
+
+            <div class="interestElement">
+                <a href="/recruitstudy/entrance">
+                    <img src="/img/entrance.png" class="interestElementImg">
+                    <p class="interestElementText">입시</p>
+                </a>
+            </div>
+
+            <div class="interestElement">
+                <a href="/recruitstudy/engineer">
+                    <img src="/img/engineer.png" class="interestElementImg">
+                    <p class="interestElementText">공학</p>
+                </a>
+            </div>
+
+            <div class="interestElement">
+                <a href="/recruitstudy/language">
+                    <img src="/img/language.png" class="interestElementImg">
+                    <p class="interestElementText">언어</p>
+                </a>
+            </div>
+
+            <div class="interestElement">
+                <a href="/recruitstudy/employment">
+                    <img src="/img/employment.png" class="interestElementImg">
+                    <p class="interestElementText">취업</p>
+                </a>
+            </div>
+
+            <div class="interestElement">
+                <a href="/recruitstudy/etc">
+                    <img src="/img/etc.png" class="interestElementImg">
+                    <p class="interestElementText">기타</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <div class="bestStudyContainer">
+        <div class="BestTitle">
+            <a href="/">지금 가장 인기있는 스터디&nbsp;&nbsp;&gt;</a>
+        </div>
+        <div class="bestStudySlides">
+            <ul class="bestStudyInner">
+                <li class="bestStudyElement" th:each="recruitStudy : ${list}">
+                    <div class="bestStudyA">
+                        <a th:href="@{/recruitstudy/post(idx = ${recruitStudy.idx})}">
+                            <img th:src="${recruitStudy.image}" class="bestStudyImg">
+                            <div class="status"><span>모집중</span></div>
+                            <p class="bestStudyTitle" th:text="${recruitStudy.title}">백엔드 공부할 사람 구합니다 @@@@</p>
+                            <p class="bestStudyText" th:text="${recruitStudy.writer}">밤톨</p>
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <p class="studyController">
+            <span class="studyPrev prev"><</span>
+            <span class="studyNext next">></span>
+        </p>
+    </div>
+
+
+
+
+    <div class="bestMentorContainer">
+        <div class="BestTitle">
+            <a href="/">요즘 주목받는 멘토&nbsp;&nbsp;&gt;</a>
+        </div>
+        <div class="bestMentorSlides">
+            <ul class="bestStudyInner">
+                <li class="bestStudyElement" th:each="recruitMentee : ${menteeList}">
+                    <div class="bestStudyA">
+                        <a th:href="@{/recruitmenteelist/post(idx = ${recruitMentee.idx})}">
+                            <img th:src="${recruitMentee.image}" class="bestStudyImg">
+                            <div class="status"><span>모집중</span></div>
+                            <p class="bestStudyTitle" th:text="${recruitMentee.title}">백엔드 공부할 사람 구합니다 @@@@</p>
+                            <p class="bestStudyText" th:text="${recruitMentee.writer}">밤톨</p>
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <p class="mentorController">
+            <span class="mentorPrev prev">&lt;</span>
+            <span class="mentorNext next">&gt;</span>
+        </p>
+    </div>
+
+    <footer>
+        <div class="wrapper">
+            <div class="footer_left">
+                <div class="logo_div">
+                    <a href="/">
+                        <img src="/img/logo_mate.png" class="logo">
+                    </a>
+                </div>
+
+                <ul class="left_ul">
+                    <li class="left_element">
+                        <a href="/" class="left_text">개인정보처리방침</a>
+                    </li>
+                    <li class="left_element">
+                        <a href="/" class="left_text">|  이용약관</a>
+                    </li>
+                </ul>
+
+                <div class="information">
+                    <span class="project_info left_text">프로젝트 소개 입력 프로젝트 소개 입력 프로젝트 소개 입력 프로젝트 소개 입력 프로젝트 소개 입력 프로젝트 소개 입력 프로젝트 소개 입력 </span>
+                </div>
+
+            </div>
+            <div class="footer_right">
+                <p>Contact Us</p>
+                <ul>
+                    <li class="mail">
+                        <a href="mailto:8993jin@naver.com" target="_blank">
+                            <img src="/img/email.png" class="contact_icon">
+                        </a>
+                    </li>
+                    <li class="github">
+                        <a href="https://github.com/AlcoholParty" target="_blank">
+                            <img src="/img/github.png" class="contact_icon">
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+<!--JS----------------------------------------------------------------------------------------------------------------->
+    <script>
+        const slides = document.querySelector('.slides'); //전체 슬라이드 컨테이너
+        const slideImg = document.querySelectorAll('.slides li'); //모든 슬라이드들
+        let currentIdx = 0; //현재 슬라이드 index
+        const slideCount = slideImg.length; // 슬라이드 개수
+        const prev = document.querySelector('.prev'); //이전 버튼
+        const next = document.querySelector('.next'); //다음 버튼
+        const slideWidth = 1184; //한개의 슬라이드 넓이
+        const slideMargin = 100; //슬라이드간의 margin 값
+
+        //전체 슬라이드 컨테이너 넓이 설정
+        slides.style.width = (slideWidth + slideMargin) * slideCount + 'px';
+
+        function moveSlide(num) {
+          slides.style.left = -num * 1284 + 'px';
+          currentIdx = num;
+        }
+
+        prev.addEventListener('click', function () {
+          if (currentIdx !== 0) {
+            moveSlide(currentIdx - 1);
+          }
+          //첫번째 슬라이드가 아닐 때, 이전 버튼을 누르면 전 슬라이드로 이동
+        });
+
+        next.addEventListener('click', function () {
+          if (currentIdx !== slideCount - 1) {
+            moveSlide(currentIdx + 1);
+          }
+          //마지막 슬라이드가 아닐 때,  다음 버튼을 누르면 다음 슬라이드로 이동
+        });
+    </script>
+
+    <script>
+        const bestStudySlides = document.querySelector('.bestStudySlides'); //전체 슬라이드 컨테이너
+        const studySlideImg = document.querySelectorAll('.bestStudySlides li'); //모든 슬라이드들
+        let studyCurrentIdx = 0; //현재 슬라이드 index
+        const studySlideCount = 2; // 슬라이드 개수
+        const studyPrev = document.querySelector('.studyPrev'); //이전 버튼
+        const studyNext = document.querySelector('.studyNext'); //다음 버튼
+        const studySlideWidth = 1184; //한개의 슬라이드 넓이
+
+
+        //전체 슬라이드 컨테이너 넓이 설정
+        bestStudySlides.style.width = studySlideWidth * studySlideCount + 'px';
+
+        function studyMoveSlide(num) {
+          bestStudySlides.style.left = -num * 1184 + 'px';
+          studyCurrentIdx = num;
+        }
+
+        studyPrev.addEventListener('click', function () {
+          if (studyCurrentIdx !== 0) {
+            studyMoveSlide(studyCurrentIdx - 1);
+          }
+          //첫번째 슬라이드가 아닐 때, 이전 버튼을 누르면 전 슬라이드로 이동
+        });
+
+        studyNext.addEventListener('click', function () {
+          if (studyCurrentIdx !== studySlideCount - 1) {
+            studyMoveSlide(studyCurrentIdx + 1);
+          }
+          //마지막 슬라이드가 아닐 때,  다음 버튼을 누르면 다음 슬라이드로 이동
+        });
+    </script>
+
+    <script>
+        const bestMentorSlides = document.querySelector('.bestMentorSlides'); //전체 슬라이드 컨테이너
+        let mentorCurrentIdx = 0; //현재 슬라이드 index
+        const mentorSlideCount = 2; // 슬라이드 개수
+        const mentorPrev = document.querySelector('.mentorPrev'); //이전 버튼
+        const mentorNext = document.querySelector('.mentorNext'); //다음 버튼
+        const mentorSlideWidth = 1184; //한개의 슬라이드 넓이
+
+        //전체 슬라이드 컨테이너 넓이 설정
+        bestMentorSlides.style.width = mentorSlideWidth * mentorSlideCount + 'px';
+
+        function mentorMoveSlide(num) {
+          bestMentorSlides.style.left = -num * 1184 + 'px';
+          mentorCurrentIdx = num;
+        }
+
+        mentorPrev.addEventListener('click', function () {
+          if (mentorCurrentIdx !== 0) {
+            mentorMoveSlide(mentorCurrentIdx - 1);
+          }
+          //첫번째 슬라이드가 아닐 때, 이전 버튼을 누르면 전 슬라이드로 이동
+        });
+
+        mentorNext.addEventListener('click', function () {
+          if (mentorCurrentIdx !== mentorSlideCount - 1) {
+            mentorMoveSlide(mentorCurrentIdx + 1);
+          }
+          //마지막 슬라이드가 아닐 때,  다음 버튼을 누르면 다음 슬라이드로 이동
+        });
+    </script>
+    <script src="/js/noti.js" defer></script>
+</body>
+</html>

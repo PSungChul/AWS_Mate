@@ -1,0 +1,239 @@
+*{
+    font-family: 'NanumSquareNeo';
+}
+body{
+    width: 100%;
+    height: 100%;
+}
+.roomInfo {
+    height: 3%;
+    width: 99.2%;
+    margin: 5px 0px;
+    border-radius: 5px;
+    background: #8b8b8b;
+    display: flex;
+    align-items: center;
+}
+.roomInfo b{
+    margin: 0px 10px;
+}
+
+.container{
+    width: 100%;
+    height: 95%;
+}
+
+.topNav {
+    display: flex;
+    height: 10%;
+    margin: 5px 0px;
+    border-radius: 5px;
+}
+
+.topLeftMember {
+    display: flex;
+    border-radius: 5px;
+    background: #ececec;
+    box-sizing: border-box;
+    width: 80%;
+    height: 100%;
+}
+
+.participant {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    background: #9f9d9d;
+    width: 10%;
+    height: 80%;
+    background-color: #9f9d9d;
+    border-radius: 10px;
+    margin: 10px;
+}
+
+.participantImg {
+    width: 45%;
+    height: 75%;
+    border-radius: 50%;
+    margin: 10px;
+}
+
+.participantInfo {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    height: 100%;
+}
+.participantInfo b {
+    width: 100%;
+    height: 40%;
+    padding-left: 5px;
+}
+.participantNickname {
+    padding-top: 10px;
+}
+.participantMaster {
+    color: #d14141;
+    margin-left: 3px;
+    font-size: 13px;
+}
+
+.topRightMenu {
+    border-radius: 5px;
+    background: #ececec;
+    box-sizing: border-box;
+    width: 19%;
+    margin-left: 5px;
+    height: 100%;
+}
+
+.menuBarExitBtn {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    background-color: #87AF6E;
+    border: none;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+
+
+.middleMeta {
+    display: flex;
+    height: 80%;
+    margin: 5px 0px;
+}
+
+.metaCanvas {
+    border: 2px solid black;
+    box-sizing: border-box;
+    width: 80%;
+    border-radius: 5px;
+}
+
+.detailProfileAndChatArea {
+    width: 19%;
+    margin-left: 5px;
+}
+
+.detailProfile {
+    display: none;
+    width: 100%;
+    height: 25%;
+    margin-bottom: 2.5%;
+    border-radius: 5px;
+    background: #ececec;
+}
+
+.detailProfileCloseBtn {
+    width: 10%;
+    height: 10%;
+    text-align: center;
+    background-color: #9f9d9d;
+    box-sizing: border-box;
+    cursor: pointer;
+    float: right;
+    border-radius: 10px;
+    margin: 5px;
+}
+
+.detailProfileImageArea {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50%;
+    width: 100%;
+}
+
+.detailProfileImage {
+    max-height: 100%;
+    max-width: 100%;
+    border-radius: 50%;
+}
+
+.detailProfileNicknameArea {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    height: 30%;
+    width: 100%;
+}
+
+
+.chatAreaDiv {
+    border-radius: 5px;
+    background: #ececec;
+    width: 100%;
+    height: 98.7%;
+    overflow-y: scroll;
+    padding: 5px;
+}
+
+.chatTitle {
+    text-align: center;
+    font-weight: bold;
+    font-size: 20px;
+    margin: 10px 0px;
+}
+
+
+
+.bottomArea {
+    display: flex;
+    height: 5%;
+    margin: 5px 0px;
+}
+
+.recordArea {
+    box-sizing: border-box;
+    width: 80%;
+    height: 80%
+    background: #ececec;
+    border-radius: 5px;
+    margin: 5px;
+    display: flex;
+}
+
+.recordPlayer {
+    width: 70%;
+    height: 100%;
+    float: left;
+    border-radius: 10px;
+    display: flex;
+}
+
+.recordBtn {
+    width: 10%;
+    height: 100%;
+    float: right;
+    border-radius: 10px;
+    background-color: #87AF6E;
+    border: none;
+    margin: 0px 5px;
+}
+
+.messageArea {
+    box-sizing: border-box;
+    width: 19.5%;
+    display: flex;
+    margin: 5px 0px;
+}
+
+.message {
+    border: none;
+    width: 70%;
+    height: 96.5%;
+    background: #ececec;
+    border-radius: 10px;
+    margin-right: 5px;
+}
+
+.messageSendBtn {
+    width: 25%;
+    height: 100%;
+    background-color: #87AF6E;
+    border-radius: 10px;
+    border: none;
+}

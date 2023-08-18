@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>메타</title>
+    <link rel="stylesheet" type="text/css" href="/css/header.css">
+    <link rel="stylesheet" type="text/css" href="/css/footer.css">
+    <link rel="stylesheet" type="text/css" href="/css/MetaRoom.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-neo.css" rel="stylesheet">
+    <script src="/js/httpRequest.js"></script>
+    <script src="/js/mainAlarm.js"></script>
+    <script th:inline="javascript">
+        let errRoom = [[${errRoom}]]; // 방 에러 메시지
+        let idx = [[${idx}]]; // 방 번호
+        let nickname = [[${nickname}]]; // 닉네임
+        // 방 에러 메시지가 있는 경우
+        if ( errRoom != null ) {
+            alert(errRoom);
+            console.log(errRoom);
+            location.href = "/meta/selfexit?idx=" + idx + "&nickname=" + nickname;
+        }
+    </script>
+
+    <script th:inline="javascript">
+        let err = [[${err}]]; // 에러 메시지
+        // 에러 메시지가 있는 경우
+        if (err != null) {
+            alert(err);
+            location.href = "/meta";
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <nav class="headerContainer">
+            <div class="headerMenu">
+                <div class="headerMenuLeft">
+
+                    <div class="headerImg">
+                        <a href="/" alt="SOJU">
+                            <img src="/img/logo_mate.png" class="mainLogo">
+                        </a>
+                    </div>
+
+                    <div class="menuContainer">
+                        <div class="categoryMenu">
+                            <span>스터디원</span>
+                            <div class="dropTable">
+                                <a class="dropRecruitStudy dropMenu" href="/recruitstudy">스터디원 모집</a>
+                                <a class="dropRecruitMentee dropMenu" href="/recruitmenteelist">멘티 모집</a>
+                                <a class="dropRecruitMentor dropMenu" href="/recruitmentorlist">멘토 모집</a>
+                            </div>
+                        </div>
+
+                        <div class="categoryMenu">
+                            <a href="/meta">
+                                <span>스터디룸</span>
+                            </a>
+                        </div>
+                        <div class="categoryMenu">
+                            <a href="/store">
+                                <span>스토어</span>
+                            </a>
+                        </div>
+                        <div class="categoryMenu">
+                            <a href="/mypage">
+                                <span>마이페이지</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="headerMenuRight">
+                    <div class="welcome" sec:authorize="isAnonymous()">로그인이 필요합니다!!</div>
+                    <div class="whenLogin" sec:authorize="isAuthenticated()">
+                        <div class="welcome" th:text="${metaProfile.nickname} + '님 반갑습니다!'"></div>
+                        <div class="notificationsMenu">
+                            <div class="icon">
+                                <i class="ri-notification-4-fill"></i>
+                            </div>
+                            <div class="notiDrop">
+                                <p>최근 알림</p>
+                                <div class="notiList">
+                                    <a class="notiDropMenu" th:each="alarm : ${alarmList}">
+                                        <div th:if="${alarm.alarmType} == '2'">
+                                            <form>
+                                                <span class="notiCircle"></span>
+                                                <span class="notiText" th:text="${alarm.title}"></span><br>
+                                                <input type="hidden" name="idx" th:value="${alarm.idx}">
+                                                <input type="hidden" name="recruitStudyIdx" th:value="${alarm.recruitStudyIdx}">
+                                                <input type="hidden" name="recruitMentorIdx" th:value="${alarm.recruitMentorIdx}">
+                                                <input type="hidden" name="recruitMenteeIdx" th:value="${alarm.recruitMenteeIdx}">
+                                                <input type="hidden" name="nickname" th:value="${alarm.nickname}">
+                                                <input type="button" value="수락" onclick="recruitAccept(this.form);">
+                                                <input type="button" value="거절" onclick="recruitRefuse(this.form);">
+                                            </form>
+                                        </div>
+                                        <div th:if="${alarm.alarmType} != '2'">
+                                            <span class="notiCircle"></span>
+                                            <form>
+                                                <input type="hidden" name="idx" th:value="${alarm.idx}">
+                                                <input type="button" value="X" onclick="deleteAlarm(this.form);"><br>
+                                                <span class="notiText" th:text="${alarm.title}"></span>
+                                            </form>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="whenLogin" sec:authorize="isAnonymous()">
+                        <div class="welcome"></div>
+                        <div class="notificationsMenu" onclick="location.href='/mypage/alarm'" style="visibility: hidden;">
+                            <div class="icon" th:data-number="${alarmCount}">
+                                <i class="ri-notification-4-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btnLogin">
+                        <input class="inputButtonLogin" sec:authorize="isAnonymous()" type="button" value="로그인" onclick="location.href='/loginform'">
+                        <input class="inputButtonLogin" sec:authorize="isAuthenticated()" type="button" value="로그아웃" onclick="location.href='/logout'">
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+
+
+
+    <div class="container">
+        <div class="leftContainer">
+
+            <div class="profileContainer">
+                <div class="profileTitle">
+                    <span>프로필</span>
+                </div>
+
+                <div class="profileWrapper" th:each="profile : ${metaProfile}">
+                    <div class="profileDiv">
+                        <div class="profileImgDiv">
+                            <img class="profileImg" th:src="@{/imagePath/} + ${profile.profileImage}">
+                        </div>
+                        <div class="profileElement">
+                            <div class="profileTextDiv">
+                                <div class="profileTextWrapper">
+                                    <span>닉네임</span>
+                                    <div class="profileText" th:text="${profile.nickname}"></div>
+                                </div>
+                                <div class="profileTextWrapper">
+                                    <span>관심분야</span>
+                                    <div th:if="${profile.studyType == 'computer'}" class="profileText">컴퓨터 / IT</div>
+                                    <div th:if="${profile.studyType == 'math'}" class="profileText">수학</div>
+                                    <div th:if="${profile.studyType == 'management'}" class="profileText">경영 / 마케팅</div>
+                                    <div th:if="${profile.studyType == 'design'}" class="profileText">디자인</div>
+                                    <div th:if="${profile.studyType == 'education'}" class="profileText">교육</div>
+                                    <div th:if="${profile.studyType == 'literature'}" class="profileText">문학</div>
+                                    <div th:if="${profile.studyType == 'engineering'}" class="profileText">공학</div>
+                                    <div th:if="${profile.studyType == 'language'}" class="profileText">언어</div>
+                                    <div th:if="${profile.studyType == 'employment'}" class="profileText">취업</div>
+                                    <div th:if="${profile.studyType == 'entrance'}" class="profileText">입시</div>
+                                    <div th:if="${profile.studyType == 'etc'}" class="profileText">기타</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profileCheckList">
+                        <input class="profileCheckListBtn" type="button" value="체크리스트" onclick="location.href = '/meta/checklist'">
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="roomContainer">
+                <form class="createRoomDiv" action="/meta/createmetaform/createmeta" method="post">
+                    <input class="createRoomBtn" type="button" value="방 만들기" onclick="location.href='/meta/createmetaform'">
+                    <input name="metaType" type="hidden" value="oneRoom">
+                    <input name="metaMaster" type="hidden" th:value="${metaProfile.nickname}"></li>
+                    <input class="createRoomBtn" type="submit" value="혼자 공부방">
+                </form>
+
+                <div class="recentlyRoomDiv">
+                    <div class="recentlyRoomTitle">
+                        <span>최근 입장방</span>
+                    </div>
+                    <div class="recentlyRoomListDiv">
+                        <div class="recentlyRoomListWrapper">
+                            <div class="recentlyRoomList" th:each="recentEnterMeta : ${recentEnterMetaList}">
+                                <a th:if="${recentEnterMeta.metaType == 'studyRoom'}" th:href="@{/meta/studyroom(idx=${recentEnterMeta.idx})}" class="metaRoomALink">
+                                    <span>(스터디)</span>
+                                    <span>[[${recentEnterMeta.metaTitle}]]</span>
+                                    <span>([[${recentEnterMeta.metaRecruitingPersonnel}]] / [[${recentEnterMeta.metaPersonnel}]])</span>
+                                    <span>방장 : [[${recentEnterMeta.metaMaster}]]</span>
+                                </a>
+                                <a th:if="${recentEnterMeta.metaType == 'cafeRoom'}" th:href="@{/meta/caferoom(idx=${recentEnterMeta.idx})}" class="metaRoomALink">
+                                    <span>(카페)</span>
+                                    <span>[[${recentEnterMeta.metaTitle}]]</span>
+                                    <span>([[${recentEnterMeta.metaRecruitingPersonnel}]] / [[${recentEnterMeta.metaPersonnel}]])</span>
+                                    <span>방장 : [[${recentEnterMeta.metaMaster}]]</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="rightContainer">
+            <div class="metaRoomContainer">
+                <div class="metaTitle">
+                    <span>스터디룸</span>
+                </div>
+                <div class="metaRoomWrapper" th:if="${check == 0}">
+
+                    <form class="metaRoomSearchContainer" action="/meta/search" method="get" th:object="${metaDTO}">
+                        <span class="search">검색</span>
+                        <select class="metaRoomSearchSelect" th:field="*{searchType}"><option value="">검색 종류</option>
+                                                                                      <option value="idx">방 번호</option>
+                                                                                      <option value="title">방 이름</option>
+                        </select>
+                        <select class="metaRoomSearchSelect" th:field="*{metaType}"><option value="">방 분야</option>
+                                                                                    <option value="studyRoom">스터디</option>
+                                                                                    <option value="cafeRoom">카페</option>
+                        </select>
+
+                        <div class="metaRoomSearchDiv">
+                            <input class="metaRoomSearchInput" th:field="*{search}" placeholder="입장하고 싶은 방의 이름을 입력해주세요." type="text">
+                            <input class="metaRoomSearchBtn" type="button" value="검색" onclick="searchMeta(this.form)">
+                        </div>
+                    </form>
+
+                    <div class="metaRoomListContainer">
+                        <div class="metaRoomTitle">
+                            <span>방목록</span>
+                        </div>
+                        <div class="metaRoomListDiv">
+                            <div class="metaRoomListTitle">
+                                <span>스터디룸</span>
+                            </div>
+                            <div class="metaRoomList">
+                                <div class="metaRoomListName" th:each="study : ${studyList}">
+                                    <a th:href="@{/meta/studyroom(idx=${study.idx})}" class="metaRoomALink">
+                                        <span>(스터디)</span>
+                                        <span>[[${study.metaTitle}]]</span>
+                                        <span>([[${study.metaRecruitingPersonnel}]] / [[${study.metaPersonnel}]])</span>
+                                        <span>방장 : [[${study.metaMaster}]]</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metaRoomListDiv">
+                            <div class="metaRoomListTitle">
+                                <span>휴식방</span>
+                            </div>
+                            <div class="metaRoomList">
+                                <div class="metaRoomListName" th:each="cafe : ${cafeList}">
+                                    <a th:href="@{/meta/caferoom(idx=${cafe.idx})}" class="metaRoomALink">
+                                        <span>(카페)</span>
+                                        <span>[[${cafe.metaTitle}]]</span>
+                                        <span>([[${cafe.metaRecruitingPersonnel}]] / [[${cafe.metaPersonnel}]])</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="metaRoomWrapper" th:if="${check == 1}">
+                    <form class="metaRoomSearchContainer" action="/meta/search" method="get" th:object="${metaDTO}">
+                        <span class="search">검색</span>
+                        <select class="metaRoomSearchSelect" th:field="*{searchType}"><option value="">검색 종류</option>
+                                                                                      <option value="idx">방 번호</option>
+                                                                                      <option value="title">방 이름</option>
+                        </select>
+                        <select class="metaRoomSearchSelect" th:field="*{metaType}"><option value="">방 분야</option>
+                                                                                    <option value="studyRoom">스터디</option>
+                                                                                    <option value="cafeRoom">카페</option>
+                        </select>
+
+                        <div class="metaRoomSearchDiv">
+                            <input class="metaRoomSearchInput" th:field="*{search}" placeholder="입장하고 싶은 방의 이름을 입력해주세요." type="text">
+                            <input class="metaRoomSearchBtn" type="button" value="검색" onclick="searchMeta(this.form)">
+                        </div>
+                    </form>
+
+                    <div class="metaRoomListContainer">
+                        <div class="metaRoomTitle">
+                            <span>방목록</span>
+                        </div>
+                        <div class="metaRoomListDiv">
+                            <div class="metaRoomListTitle">
+                                <span>스터디룸</span>
+                            </div>
+                            <div class="metaRoomList">
+                                <div class="metaRoomListName" th:each="study : ${studyList}">
+                                    <a th:href="@{/meta/studyroom(idx=${study.idx})}" class="metaRoomALink">
+                                        <span>(스터디)</span>
+                                        <span>[[${study.metaTitle}]]</span>
+                                        <span>([[${study.metaRecruitingPersonnel}]] / [[${study.metaPersonnel}]])</span>
+                                        <span>방장 : [[${study.metaMaster}]]</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metaRoomListDiv">
+                            <div class="metaRoomListTitle">
+                                <span>휴식방</span>
+                            </div>
+                            <div class="metaRoomList">
+                                <div class="metaRoomListName" th:each="cafe : ${cafeList}">
+                                    <a th:href="@{/meta/caferoom(idx=${cafe.idx})}" class="metaRoomALink">
+                                        <span>(카페)</span>
+                                        <span>[[${cafe.metaTitle}]]</span>
+                                        <span>([[${cafe.metaRecruitingPersonnel}]] / [[${cafe.metaPersonnel}]])</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <footer>
+        <div class="wrapper">
+            <div class="footer_left">
+                <div class="logo_div">
+                    <a href="/">
+                        <img src="/img/logo_mate.png" class="logo">
+                    </a>
+                </div>
+
+                <ul class="left_ul">
+                    <li class="left_element">
+                        <a href="/" class="left_text">개인정보처리방침</a>
+                    </li>
+                    <li class="left_element">
+                        <a href="/" class="left_text">|  이용약관</a>
+                    </li>
+                </ul>
+
+                <div class="information">
+                    <span class="project_info left_text">프로젝트 소개 입력 프로젝트 소개 입력 프로젝트 소개 입력 프로젝트 소개 입력 프로젝트 소개 입력 프로젝트 소개 입력 프로젝트 소개 입력 </span>
+                </div>
+
+            </div>
+            <div class="footer_right">
+                <p>Contact Us</p>
+                <ul>
+                    <li class="mail">
+                        <a href="mailto:8993jin@naver.com" target="_blank">
+                            <img src="/img/email.png" class="contact_icon">
+                        </a>
+                    </li>
+                    <li class="github">
+                        <a href="https://github.com/AlcoholParty" target="_blank">
+                            <img src="/img/github.png" class="contact_icon">
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+<!-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+    <script>
+        function searchMeta(f) {
+            let searchType = f.searchType.value;
+            let search = f.search.value;
+            let metaType = f.metaType.value;
+
+            if ( searchType == "" ) {
+                alert("검색 종류를 선택하세요");
+                return;
+            }
+
+            if ( metaType == "" ) {
+                alert("방 분야를 선택하세요");
+                return;
+            }
+
+            if ( searchType == "idx" ) {
+                if ( search == "" ) {
+                    alert("방 번호를 입력하세요");
+                    return;
+                }
+            }
+
+            f.action = "/meta/search";
+            f.method = "get";
+            f.submit();
+        }
+    </script>
+    <script src="/js/noti.js" defer></script>
+</body>
+</html>

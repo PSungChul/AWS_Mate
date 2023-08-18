@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입 페이지</title>
+    <link rel="stylesheet" type="text/css" href="/css/join_find.css">
+    <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-neo.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- th:object="${바인딩한 객체의 변수명}" - 모델로 바인딩한 객체를 가져온다. -->
+        <form th:object="${memberDTO}">
+            <!-- 이메일 중복 체크 값 -->
+            <input id="hEmailCheck" type="hidden">
+            <!-- 이메일 인증 번호 체크 값 -->
+            <input id="hEmailKey" type="hidden">
+            <input id="hNickname" type="hidden">
+            <input id="hPhoneCheck" type="hidden">
+
+            <div class="mainLogo">
+                <a href="/" alt="SOJU">
+                    <img src="/img/logo_mate.png" class="mainLogoImg">
+                </a>
+            </div>
+            <h2>회원가입</h2>
+
+            <div class="joinFormContainer">
+                <ul>
+                    <!-- th:field="*{th:object로 가져온 객체의 내부 변수명}" - 모델로 바인딩한 객체의 내부 변수들을 가져와 id, name, value 속성을 자동으로 처리 해준다. -->
+                    <li class="liJoinInput"><label class="labelText">아이디 </label><br><input th:field="*{emailId}" class="inputText" placeholder="이메일 주소" type="text">
+                                                                                      <input type="button" value="인증번호 전송" class="btnJoinForm" onclick="sendEmail(this.form)"></li>
+                    <li class="liJoinInput"><label class="labelText">인증번호 입력 </label><br><input id="emailKey" class="inputText" placeholder="인증번호" type="text">
+                                                                                            <input type="button" value="인증번호 확인" class="btnJoinForm" onclick="checkEmail()"></li>
+
+                    <li class="liJoinInput"><label class="labelText">비밀번호 </label><br><input th:field="*{pwd}" type="password" class="inputText" placeholder="영문, 숫자, 특수기호를 포함하여 5자리 이상" oninput="pwdCheck(this.form)"><br></li>
+                    <li class="liJoinInput"><label id="pwdText1" class="errorMsg"></label></li>
+                    <li class="liJoinInput"><label class="labelText">비밀번호 확인 </label><br><input id="pwd2" type="password" class="inputText" placeholder="영문, 숫자, 특수기호를 포함하여 5자리 이상" oninput="pwdCheck2(this.form)"><br></li>
+                    <li class="liJoinInput"><label id="pwdText2" class="errorMsg"></label></li>
+
+                    <li class="liJoinInput"><label class="labelText">닉네임(별명) </label><br><input th:field="*{nickname}" class="inputText" placeholder="10자 이내 닉네임" type="text">
+                                                                                           <input type="button" value="중복확인" class="btnJoinForm" onclick="checkNickname(this.form)"><br></li>
+                    <li class="liJoinInput"><label id="nicknameCheck" class="errorMsg"></label></li>
+
+                    <li class="liJoinInput"><label class="labelText">성별 </label><br><label class="genderLabel">남</label><input th:field="*{gender}" type="radio" value="M">
+                                                                                     <label class="genderLabel">여</label><input th:field="*{gender}" type="radio" value="F"></li>
+
+                    <li class="liJoinInput"><label class="labelText">이름 </label><br><input th:field="*{name}" class="inputText" placeholder="이름" type="text"></li>
+
+                    <li class="liJoinInput"><label class="labelText">생일 </label><br><input th:field="*{birthday}" class="inputText" type="date" style="color: #757575; font-size: 15px;"></li>
+
+                    <li class="liJoinInput"><label class="labelText">휴대전화 </label><br><input th:field="*{phoneNumber}" type="tel" class="inputText" placeholder="휴대전화">
+                                                                                        <input id="btnPhone" value="인증하기" class="btnJoinForm" type="button"></li>
+
+                    <li class="liJoinInput"><label class="labelText">주소 </label><br><input th:field="*{address}" class="inputText" type="text" placeholder="주소">
+                                                                                     <input id="btnAddress" type="button" class="btnJoinForm" value="주소찾기"></li>
+                    <li class="liJoinInput"><label class="labelText">상세주소 </label><br><input th:field="*{detailAddress}" class="inputText" type="text" placeholder="상세주소"></li>
+
+                    <li class="liJoinInput"><label class="labelText">관심분야 </label><br><select class="studyType" th:field="*{studyType}"><option value="">관심분야</option>
+                                                                                                                                          <option value="computer">컴퓨터 / IT</option>
+                                                                                                                                          <option value="math">수학</option>
+                                                                                                                                          <option value="management">경영 / 마케팅</option>
+                                                                                                                                          <option value="design">디자인</option>
+                                                                                                                                          <option value="education">교육</option>
+                                                                                                                                          <option value="literature">문학</option>
+                                                                                                                                          <option value="engineering">공학</option>
+                                                                                                                                          <option value="language">언어</option>
+                                                                                                                                          <option value="employment">취업</option>
+                                                                                                                                          <option value="entrance">입시</option>
+                                                                                                                                          <option value="etc">기타</option></select></li>
+                </ul>
+            </div>
+
+            <div class="divBtnJoin">
+                <input type="button" value="가입" class="btnJoin" onclick="join(this.form)">
+                <input type="button" value="취소" class="btnJoin" onclick="location.href='/loginform'">
+            </div>
+        </form>
+    </div>
+<!---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+    <!-- Ajax사용을 위한 js를 추가 -->
+    <script src="/js/httpRequest.js"></script>
+
+    <!-- 이메일 중복 체크, 이메일 인증 번호 전송 및 체크 -->
+    <script>
+        // 이메일 인증 번호 발송
+        function sendEmail(f) {
+            let emailId = f.emailId.value; // 이메일 아이디
+
+            // 이메일 형식 체크 패턴
+            let pattern = /^[A-Za-z0-9_\.\-]+@[A-Za-z0-9\-]+\.[A-Za-z0-9\-]+/;
+
+            // 아이디가 이메일 형식에 맞는지 체크한다.
+            // 이메일 형식이 아닐 경우
+            if( !pattern.test(emailId) ) {
+                alert("이메일 형식을 다시 확인해주세요\n ex) abc@naver.com");
+                return;
+            // 이메일 형식이 맞는 경우
+            } else {
+                // 1. Ajax를 사용하여 작성한 아이디를 컨트롤러로 보낸다.
+                let url = "/joinform/emailsend";
+                let param = "emailId=" + emailId;
+                sendRequest(url, param, resultSendEmail, "POST");
+            }
+        }
+        // 이메일 인증 번호 발송 콜백 메소드
+        function resultSendEmail() {
+            if ( xhr.readyState == 4 && xhr.status == 200 ) {
+                // 14. 컨트롤러에서 반환된 이메일 정보 DTO를 받아온다.
+                let data = xhr.responseText;
+                // 15. 14에서 받아온 DTO를 JavaScript 객체로 변환한다.
+                let jsData = JSON.parse(data);
+                let hEmailCheck = document.getElementById("hEmailCheck"); // 아이디 중복 체크 값
+                let hEmailKey = document.getElementById("hEmailKey"); // 이메일 인증 번호 체크 값
+
+                // 16. 15에서 변환된 DTO 값 중 체크 값으로 메일이 정상적으로 발송됬는지 체크한다.
+                // 16-1. 메일이 발송이 실패한 경우 - 중복된 아이디 - 사용 불가
+                if ( jsData.emailId == "0" ) {
+                    alert(jsData.msg); // 변환된 DTO 값 중 메세지를 가져와 알람으로 띄운다.
+                    hEmailCheck.value = "false"; // 아이디 중복 체크 값에 false를 전달한다.
+                    return;
+                // 16-2. 메일 발송이 실패한 경우 - 내부 문제로 발송 실패
+                } else if ( jsData.emailId == "-1" ) {
+                    alert(jsData.msg); // 변환된 DTO 값 중 메세지를 가져와 알람으로 띄운다.
+                    hEmailCheck.value = "false"; // 아이디 중복 체크 값에 false를 전달한다.
+                    return;
+                // 16-3. 메일이 발송이 성공한 경우 - 사용 가능한 아이디
+                } else {
+                    alert("인증 메일을 발송했습니다.");
+                    hEmailKey.value = jsData.msg; // 15에서 변환된 DTO 값 중 메세지를 가져와 이메일 인증 번호 체크 값(암호화된 이메일 인증 번호)에 전달한다.
+                    return;
+                }
+            }
+        }
+
+        // 이메일 인증 번호 체크
+        function checkEmail() {
+            let emailId = document.getElementById("emailId"); // 이메일 아이디
+            let emailKey = document.getElementById("emailKey"); // 이메일 인증 번호
+            let hEmailCheck = document.getElementById("hEmailCheck"); // 아이디 중복 체크 값
+            let hEmailKey = document.getElementById("hEmailKey"); // 이메일 인증 번호 체크 값(암호화된 이메일 인증 번호)
+
+            // 작성한 이메일 인증 번호와 이메일 인증 번호 체크 값이 같은지 체크한다.
+            // fetch를 사용하여 이메일 인증 번호 체크 URL에 파라미터로 작성한 이메일 인증 번호와 이메일 인증 번호 체크 값(암호화된 이메일 인증 번호)을 가져가 두개의 이메일 인증 번호가 일치하는지 체크한다.
+            // fetch(url, { options: value }) - 브라우저에서 제공하는 API 중 하나로, 네트워크 요청을 보내고 응답을 받아오는 메소드이다.
+            //                                  fetch() 메소드는 첫 번째 인자로 서버에 데이터를 요청할 URL을 전달받고, 두 번째 인자로 선택적으로 HTTP 요청과 관련된 다양한 옵션을 설정하는 객체를 전달받는다.
+            //                                  여기서 옵션 객체는 HTTP 요청에 대한 옵션을 설정할 수 있는 여러 가지 속성을 가지고 있는데,
+            //                                  예를 들어 method 속성을 이용하여 HTTP 요청 메소드(GET, POST, PUT, DELETE 등)를 지정할 수 있으며,
+            //                                  method 속성을 지정하지 않으면 기본적으로 HTTP 요청 메서드는 GET이 된다.
+            //                                  그러기에 두 번째 인자로 옵션 객체를 전달하지 않으면 기본적으로 HTTP 요청 메서드는 GET으로 지정된다.
+            //                                  또 다른 속성으로는 headers, mode, cache, credentials 등이 있다.
+            //                                  fetch() 메소드는 Promise 객체를 반환하며, 이를 통해 비동기적으로 서버로부터 데이터를 받아올 수 있다.
+            //                                  응답을 받아오는 데 성공하면 Response 객체를 반환하고, 실패하면 Error 객체를 반환한다.
+            // 예시 - 아래와 같이 fetch 메소드를 사용하여 JSON 데이터를 요청할 수 있다.
+            // fetch("/joinform/emailsend/emailcheck?emailKey=" + emailKey.value + "&hEmailKey=" + hEmailKey.value, { method: "POST" })
+            //     .then(response => response.json()) // JSON 형식으로 파싱
+            //     .then(data => { console.log(data) }) // 응답 데이터 처리
+            //     .catch(error => console.error(error)); // 오류 처리
+            // fetch 메소드는 Promise를 반환하기 때문에, then 메서드를 사용하여 비동기 처리를 할 수 있다.
+            // fetch 메소드를 사용하여 ""/joinform/emailsend/emailcheck?emailKey=" + emailKey.value + "&hEmailKey=" + hEmailKey.value" 주소로 POST 요청을 보내고,
+            // then() 메소드를 사용하여 요청이 성공했을 때 반환된 Response 객체를 json() 메소드를 통해 JSON 형식으로 변환한다.
+            // 그리고 다시 then() 메소드를 사용하여 변환된 JSON 데이터를 콘솔에 출력한다.
+            // 만약 요청이 실패하면 catch 메소드에서 에러를 출력한다.
+            fetch("/joinform/emailsend/emailcheck?emailKey=" + emailKey.value + "&hEmailKey=" + hEmailKey.value, { method: "POST" })
+                .then(response => response.json()) // JSON 형식으로 파싱
+                .then(data => {
+                    // 이메일 인증 번호가 일치하는 경우 - 아아디 사용 가능
+                    if ( data === true ) {
+                        alert("인증 되었습니다.");
+                        hEmailCheck.value = "true"; // 아이디 중복 체크 값에 true를 전달한다.
+                        emailId.readOnly = true; // 인증된 아이디를 변경하지 못하도록 막는다.
+                        emailKey.readOnly = true; // 작성한 이메일 인증 번호를 변경하지 못하도록 막는다.
+                        return;
+                    // 이메일 인증 번호가 일치하지 않는 경우 - 아이디 사용 불가
+                    } else {
+                        alert("인증 번호를 다시 확인해주세요");
+                        hEmailCheck.value = "false"; // 아이디 중복 체크 값에 false를 전달한다.
+                        emailKey.value = ""; // 작성한 이메일 인증 번호를 초기화한다.
+                        return;
+                    }
+                }) // 응답 데이터 처리
+                .catch(error => console.error(error)); // 오류 처리
+        }
+    </script>
+
+    <!--비밀번호 형식 제한-->
+    <script>
+        function pwdCheck(f) {
+            let pwd = f.pwd.value;
+            let pwdText1 = document.getElementById("pwdText1");
+
+            let pattern1 = /[0-9]/; // 숫자 입력
+            let pattern2 = /[a-zA-Z]/; // 영어 소문자, 대문자 입력
+            let pattern3 = /[~!@#$%^&*()_+]/; // 특수기호 입력
+
+            if ( !pattern1.test(pwd) || !pattern2.test(pwd) || !pattern3.test(pwd) || pwd.length < 5 ) {
+                pwdText1.innerHTML = "영문, 숫자, 특수기호(~!@#$%^&*()_+)를 포함하여 5자리 이상으로 구성하여야 합니다";
+            } else {
+                pwdText1.innerHTML = "";
+            }
+        }
+
+        function pwdCheck2(f) {
+            let pwd = f.pwd.value;
+            let pwd2 = f.pwd2.value;
+            let pwdText2 = document.getElementById("pwdText2");
+
+            if ( pwd2 != pwd ) {
+                pwdText2.innerHTML = "비밀번호가 일치하지 않습니다";
+            } else {
+                pwdText2.innerHTML = "";
+            }
+        }
+    </script>
+
+    <!--닉네임 중복체크 및 글자 수 제한-->
+    <script>
+        function checkNickname(f) {
+            let nickname = f.nickname.value; //입력한 닉네임 가져오기
+            let nicknameCheck = document.getElementById("nicknameCheck");
+
+            if ( nickname.length > 10 ) {
+                alert("닉네임의 길이는 10자 이내입니다.");
+                nicknameCheck.innerHTML = "닉네임은 10자내로 작성해주세요.";
+            } else {
+                nicknameCheck.innerHTML = "";
+                let url = "/joinform/nicknamecheck";
+                let param = "nickname=" + nickname;
+                sendRequest(url, param, resultCheckNickname, "POST");
+            }
+        }
+        function resultCheckNickname() {
+             if ( xhr.readyState == 4 && xhr.status == 200 ) {
+                 let data = xhr.responseText; //닉네임
+                 let hNickname = document.getElementById("hNickname");
+
+                 if ( data == "no" ) {
+                    alert("이미 존재하는 닉네임입니다.");
+                    hNickname.value = "false";
+                 } else {
+                    alert("사용 가능한 닉네임입니다.");
+                    hNickname.value = data;
+                 }
+                 return;
+             }
+        }
+    </script>
+
+    <!-- iamport.payment.js 인증 -->
+    <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.2.0.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <!-- 아임포트 본인인증 및 값 삽입 => '인증하기' 버튼 클릭시 -->
+    <script>
+        // textbox & 버튼(2개이상)을 누르면 함수가 실행되도록 하는 방법
+        // querySelectorAll로 id값(#id)을 불러와서 배열로 생성, 이후 forEach문을 활용해 각각의 것을 눌렀을 때 실행되게 하도록 한다.
+        let openPort = document.querySelectorAll("#name, #birthday, #phoneNumber, #btnPhone");
+        openPort.forEach(function(element) {
+            element.addEventListener("click", function() {
+                var IMP = window.IMP; // init로 객체초기화 (가맹점식별코드)
+                IMP.init("imp88140833"); // 가맹점 번호
+                IMP.certification({
+                    popup: true // 팝업 사용
+                }, function (rsp) { // 1. 파라미터로 rsp를 받아온다.
+                    if ( rsp.success ){ // 인증에 성공할 경우
+                        // 2. 1에서 파라미터로 받아온 rsp에서 imp_uid를 가져온다.
+                        let impUid = rsp.imp_uid;
+                        // 3. Ajax를 사용하여 2에서 가져온 imp_uid를 컨트롤러로 보낸다.
+                        let url = "/joinform/certifications";
+                        let param = "impUid=" + impUid;
+                        sendRequest(url, param, resultCertifications, "POST");
+                        return;
+                    } else { //인증 실패 시
+                        alert("인증 실패하였습니다.");
+                        return;
+                    }
+                });
+            });
+        });
+        // 휴대폰 인증 콜백 메소드
+        function resultCertifications () {
+            if ( xhr.readyState == 4 && xhr.status == 200 ) {
+                // 32. 컨트롤러에서 반환된 유저 정보 Map을 받아온다.
+                let data = xhr.responseText;
+                // 33. 32에서 받아온 Map을 JavaScript 객체로 변환한다.
+                let jsData = JSON.parse(data);
+                let name = document.getElementById("name"); // 이름
+                let birthday = document.getElementById("birthday"); // 생년월일
+                let phoneNumber = document.getElementById("phoneNumber"); // 휴대폰 번호
+
+                // 34. 33에서 변환된 Map에 들어있는 값들을 꺼내서 각 작성란에 맞게 전달하고 변경하지 못하도록 막는다.
+                name.value = jsData.name; // 변환된 Map 값 중 이름을 가져와 이름 작성란에 전달한다.
+                name.readOnly = true; // 전달된 이름을 변경하지 못하도록 막는다.
+                birthday.value = jsData.birthday; // 변환된 Map 값 중 생년월일을 가져와 생년월일 작성란에 전달한다.
+                birthday.readOnly = true; // 전달된 생년월일을 변경하지 못하도록 막는다.
+                phoneNumber.value = jsData.phoneNumber; // 변환된 Map 값 중 휴대폰 번호를 가져와 휴대폰 번호 작성란에 전달한다.
+                phoneNumber.readOnly = true; // 전달된 휴대폰 번호를 변경하지 못하도록 막는다.
+
+                // 35. Ajax를 사용하여 33에서 변환된 Map 값 중 휴대폰 번호를 컨트롤러로 보낸다. - 중복 가입자인지 체크
+                let url = "/joinform/checkphone";
+                let param = "phoneNumber=" + jsData.phoneNumber;
+                sendRequest(url, param, resultCheckPhone, "POST");
+            }
+        }
+        // 휴대폰 번호로 중복 가입자 체크 콜백 메소드
+        function resultCheckPhone() {
+            if ( xhr.readyState == 4 && xhr.status == 200 ) {
+                // 42. 컨트롤러에서 반환된 값을 받아온다.
+                let data = xhr.responseText;
+                let name = document.getElementById("name"); // 이름
+                let birthday = document.getElementById("birthday"); // 생년월일
+                let phoneNumber = document.getElementById("phoneNumber"); // 휴대폰 번호
+
+                // 43. 42에서 받아온 값을 체크한다.
+                // 43-1. 받아온 값이 no일 경우 - 중복 가입자
+                if( data == "no" ) {
+                    alert("이미 가입된 회원정보가 있습니다.\n로그인 혹은 아이디/비밀번호 찾기를 이용해 주세요");
+                    name.value = ""; // 작성된 이름을 초기화한다.
+                    birthday.value = ""; // 작성된 생년월일을 초기화한다.
+                    phoneNumber.value = ""; // 작성된 휴대폰 번호를 초기화한다.
+                    return;
+                // 43-2. 받아온 값이 yes일 경우 - 신규 가입자
+                } else {
+                    alert("가입 가능한 회원 정보입니다.");
+                    return;
+                }
+            }
+        }
+    </script>
+
+    <!--주소입력 API-->
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script>
+        document.getElementById("address").addEventListener("click", function() {
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    document.getElementById("address").value = data.address;
+                    document.getElementById("detailAddress").focus();
+                }
+            }).open();
+        });
+        document.getElementById("btnAddress").addEventListener("click", function() {
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    document.getElementById("address").value = data.address;
+                    document.getElementById("detailAddress").focus();
+                }
+            }).open();
+        });
+    </script>
+
+    <!--회원가입 진행 & 유효성 검사-->
+    <script>
+        function join(f) {
+            //입력한 정보들
+            //emailId
+            let emailId = f.emailId.value; //Email
+            let emailKey = document.getElementById("emailKey").value; //인증번호
+            let hEmailCheck = document.getElementById("hEmailCheck").value; //인증확인
+
+            //pwd
+            let pwd = f.pwd.value; //pwd
+            let pwd2 = document.getElementById("pwd2").value; //pwd 확인
+            //비밀번호 형식
+            let pattern1 = /[0-9]/; // 숫자 입력
+            let pattern2 = /[a-zA-Z]/; // 영어 소문자, 대문자 입력
+            let pattern3 = /[~!@#$%^&*()_+]/; // 특수기호 입력
+
+            //name
+            let name = f.name.value;
+
+            //nickname
+            let nickname = f.nickname.value;
+            let hNickname = document.getElementById("hNickname").value; //닉네임 중복체크
+
+            //birthday
+            let birthday = f.birthday.value; //birthday
+
+            //gender
+            let gender = f.gender.value; //gender
+
+            //phoneNumber
+            let phoneNumber = f.phoneNumber.value; //phoneNumber
+
+            //address
+            let address = f.address.value;
+            let detailAddress = f.detailAddress.value;
+
+            //studyType
+            let studyType = f.studyType.value;
+
+            //유효성 검사
+
+            //ID
+            if ( emailId == '' ) {
+                alert("아이디를 입력하세요");
+                return;
+            }
+            //인증번호
+            if ( emailKey == '' ) {
+                alert("인증번호를 확인해주세요");
+                return;
+            }
+            //인증번호 확인
+            if ( hEmailCheck != "true" ) {
+                alert("인증번호를 확인해주세요");
+                return;
+            }
+            //비밀번호
+            if ( pwd == '' ) {
+                alert("비밀번호를 입력하세요");
+                return;
+            }
+            //비밀번호 확인
+            if ( pwd2 == '' ) {
+                alert("비밀번호 확인을 입력하세요");
+                return;
+            }
+            //pwd 형식
+            if ( !pattern1.test(pwd) || !pattern2.test(pwd) || !pattern3.test(pwd) || pwd.length < 5 ) {
+                alert("비밀번호 형식을 확인해주세요");
+                return;
+            }
+            // 비밀번호 확인
+            if ( pwd != pwd2 ) {
+                alert("비밀번호 확인이 비밀번호와 일치하지 않습니다.");
+                return;
+            }
+            //이름
+            if ( name == '' ) {
+                alert("이름을 입력하세요");
+                return;
+            }
+            //닉네임
+            if ( nickname == '' ) {
+                alert("닉네임을 입력하세요");
+                return;
+            }
+            //닉네임 형식
+            if ( nickname.length > 10 ) {
+                alert("닉네임의 길이는 10자 이내입니다.");
+                return;
+            }
+            if ( nickname != hNickname ) {
+                alert("닉네임 중복확인을 해주세요");
+                return;
+            }
+            //birthday
+            if ( birthday == '' ) {
+                alert("생일을 입력하세요");
+                return;
+            }
+            //gender
+            if ( gender == '' ) {
+                alert("성별을 선택하세요");
+                return;
+            }
+            //phoneNumber
+            if ( phoneNumber == '' ) {
+                alert("핸드폰 번호를 입력하세요");
+                return;
+            }
+            //address
+            if ( address == '' ) {
+                alert("주소를 입력하세요");
+                return;
+            }
+            //detailAddress
+            if ( detailAddress == '' ) {
+                alert("상세주소를 입력하세요");
+                return;
+            }
+            //studyType
+            if ( studyType == '' ) {
+                alert("관심분야를 선택하세요");
+                return;
+            }
+
+            let url = "/joinform/join";
+            let param = "emailId=" + emailId +
+                        "&pwd=" + pwd +
+                        "&name=" + name +
+                        "&nickname=" + nickname +
+                        "&birthday=" + birthday +
+                        "&gender=" + gender +
+                        "&phoneNumber=" + phoneNumber +
+                        "&address=" + address +
+                        "&detailAddress=" + detailAddress +
+                        "&studyType=" + studyType;
+            sendRequest(url, param, resultJoin, "POST");
+        }
+        function resultJoin() {
+            if ( xhr.readyState == 4 && xhr.status == 200 ) {
+                let data = xhr.responseText;
+
+                if (data == "no") {
+                    alert("이미 가입된 회원정보가 있습니다.\n로그인 혹은 아이디/비밀번호 찾기를 이용해 주세요");
+                    location.href = "/loginform";
+                } else {
+                    alert("가입이 완료되었습니다.\n 로그인 페이지로 이동합니다.");
+                    location.href = "/loginform";
+                }
+            }
+        }
+    </script>
+</body>
+</html>

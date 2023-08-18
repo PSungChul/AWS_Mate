@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>멘토 모집 공고</title>
+    <link rel="stylesheet" type="text/css" href="/css/header.css">
+    <link rel="stylesheet" type="text/css" href="/css/RecruitPost.css">
+</head>
+<body>
+    <header>
+        <nav class="headerContainer">
+            <div class="headerMenu">
+                <div class="headerMenuLeft">
+
+                    <div class="headerImg">
+                        <a href="/" alt="SOJU">
+                            <img src="/img/logo_mate.png" class="mainLogo">
+                        </a>
+                    </div>
+
+                    <div class="menuContainer">
+                        <div class="categoryMenu">
+                            <span>스터디원</span>
+                            <div class="dropTable">
+                                <a class="dropRecruitStudy dropMenu" href="/recruitstudy">스터디원 모집</a>
+                                <a class="dropRecruitMentee dropMenu" href="/recruitmenteelist">멘티 모집</a>
+                                <a class="dropRecruitMentor dropMenu" href="/recruitmentorlist">멘토 모집</a>
+                            </div>
+                        </div>
+
+                        <div class="categoryMenu">
+                            <a href="/meta">
+                                <span>스터디룸</span>
+                            </a>
+                        </div>
+                        <div class="categoryMenu">
+                            <a href="/store">
+                                <span>스토어</span>
+                            </a>
+                        </div>
+                        <div class="categoryMenu">
+                            <a href="/mypage">
+                                <span>마이페이지</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="headerMenuRight">
+                    <div class="whenLogin" sec:authorize="isAuthenticated()">
+                        <div class="welcome" th:text="${nickname} + '님 반갑습니다!'"></div>
+                        <div class="notificationsMenu">
+                            <div class="icon">
+                                <i class="ri-notification-4-fill"></i>
+                            </div>
+                            <div class="notiDrop">
+                                <p>최근 알림</p>
+                                <div class="notiList">
+                                    <a class="notiDropMenu" th:each="alarm : ${alarmList}">
+                                        <div th:if="${alarm.alarmType} == '2'">
+                                            <form>
+                                                <span class="notiCircle"></span>
+                                                <span class="notiText" th:text="${alarm.title}"></span><br>
+                                                <input type="hidden" name="idx" th:value="${alarm.idx}">
+                                                <input type="hidden" name="recruitStudyIdx" th:value="${alarm.recruitStudyIdx}">
+                                                <input type="hidden" name="recruitMentorIdx" th:value="${alarm.recruitMentorIdx}">
+                                                <input type="hidden" name="recruitMenteeIdx" th:value="${alarm.recruitMenteeIdx}">
+                                                <input type="hidden" name="nickname" th:value="${alarm.nickname}">
+                                                <input type="button" value="수락" onclick="recruitAccept(this.form);">
+                                                <input type="button" value="거절" onclick="recruitRefuse(this.form);">
+                                            </form>
+                                        </div>
+                                        <div th:if="${alarm.alarmType} != '2'">
+                                            <span class="notiCircle"></span>
+                                            <form>
+                                                <input type="hidden" name="idx" th:value="${alarm.idx}">
+                                                <input type="button" value="X" onclick="deleteAlarm(this.form);"><br>
+                                                <span class="notiText" th:text="${alarm.title}"></span>
+                                            </form>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="whenLogin" sec:authorize="isAnonymous()">
+                        <div class="welcome"></div>
+                        <div class="notificationsMenu" onclick="location.href='/mypage/alarm'" style="visibility: hidden;">
+                            <div class="icon" th:data-number="${alarmCount}">
+                                <i class="ri-notification-4-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btnLogin">
+                        <input class="inputButtonLogin" sec:authorize="isAnonymous()" type="button" value="로그인" onclick="location.href='/loginform'">
+                        <input class="inputButtonLogin" sec:authorize="isAuthenticated()" type="button" value="로그아웃" onclick="location.href='/logout'">
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>멘토 모집 공고</h1>
+        <div class="contentArea">
+            <input type="hidden" id="idx" th:value="${recruitMentor.idx}">
+            <ul>
+                <li class="listCenter">
+                    <div class="spanArea">
+                        <span>모집 상태</span> <span>:</span>
+                    </div>
+                    <div th:if="${recruitMentor.recruiting} == '0'" class="recruitListStatus0">
+                        모집중
+                    </div>
+                    <div th:if="${recruitMentor.recruiting} == '1'" class="recruitListStatus1">
+                        모집완료
+                    </div>
+                </li>
+                <li class="listCenter">
+                    <div class="spanArea">
+                        <span>제목</span> <span>:</span>
+                    </div>
+                    <input type="text" th:value="${recruitMentor.title}" readonly>
+                </li>
+                <li class="listCenter">
+                    <div class="spanArea">
+                        <span>작성자</span> <span>:</span>
+                    </div>
+                    <input type="text" th:value="${recruitMentor.writer}" readonly>
+                </li>
+                <li class="listCenter">
+                    <div class="spanArea">
+                        <span>분야</span> <span>:</span>
+                    </div>
+                    <input type="text" th:value="${recruitMentor.studyType}" readonly>
+                </li>
+                <li class="contentList">
+                    <div class="spanArea">
+                        <span>스터디 소개</span> <span>:</span>
+                    </div>
+                    <textarea class="recruitContent" th:text="${recruitMentor.studyIntro}" readonly></textarea>
+                </li>
+                <li class="btnList">
+                    <form>
+                        <input type="button" value="찜하기" onclick="like(this.form);">
+                        <input type="hidden" id="studyLikeCheck" name="studyLikeCheck" th:value="${recruitMentor.studyLikeCheck}">
+                        <input type="hidden" id="studyLike" name="studyLike" th:value="${recruitMentor.studyLike}">
+                        <span id="studyLikeView" th:text="${recruitMentor.studyLike}">숫자</span>
+                    </form>
+                    <div th:if="${nickname} == ${recruitMentor.writer}">
+                        <input type="button" value="글 수정" th:onclick="|location.href='@{post/modifyform(idx=${recruitMentor.idx})}'|">
+                        <input type="button" value="글 삭제" onclick="writeDelete();">
+                    </div>
+                    <input th:if="${nickname} != ${recruitMentor.writer}" type="button" value="신청하기" onclick="mentorRequest();">
+                    <input type="button" value="뒤로가기" onclick="location.href='/recruitmentorlist'">
+                </li>
+            </ul>
+        </div>
+
+        <h3>댓글</h3>
+        <div class="commentWriteArea">
+            <input class="commentWriteNickname" type="text" th:value="${nickname}" readonly>
+            <textarea class="commentWriteText" type="text" id="comment" placeholder="댓글을 남겨보세요."></textarea>
+            <input class="commentWriteBtn" type="button" value="댓글작성" onclick="writeComment();">
+        </div>
+        <div id="commentList" class="commentArea">
+            <!-- 멘토프로필 댓글 리스트 -->
+            <div th:each="comment : ${list}">
+                <ul th:if="${nickname} == ${comment.writer}">
+                    <div th:if="${comment.deleteCheck} == '0'">
+                        <form>
+                            <input type="hidden" name="idx" th:value="${comment.idx}">
+                            <li class="commentWriter">
+                                <input type="text" name="writer" th:value="${comment.writer}" readonly>
+                            </li>
+                            <li class="commentContent">
+                                <textarea name="comment" th:text="${comment.comment}" readonly></textarea>
+                            </li>
+                            <li class="commentDate">
+                                <input type="text" name="writeDate" th:value="${comment.writeDate}" readonly>
+                                <span class="commentBtn">
+                                    <input name="beforeModify" type="button" value="수정" onclick="commentModifyForm(this.form);">
+                                    <input name="modify" style="display:none;" type="button" value="수정하기" onclick="commentModify(this.form);">
+                                    <input type="button" value="삭제" onclick="commentDelete(this.form);">
+                                </span>
+                            </li>
+                        </form>
+                    </div>
+                    <div th:if="${comment.deleteCheck} == '1'">
+                        <li style="display: flex; align-items: center; height: 100px;">
+                            <span style="color: red; font-size: 20px;">삭제된 댓글입니다.</span>
+                        </li>
+                    </div>
+                </ul>
+                <ul th:if="${nickname} != ${comment.writer}">
+                    <div th:if="${comment.deleteCheck} == '0'">
+                        <div>
+                            <li class="commentWriter">
+                                <div th:text="${comment.writer}"></div>
+                            </li>
+                            <li class="commentContent">
+                                <textarea th:text="${comment.comment}" readonly></textarea>
+                            </li>
+                            <li class="commentDate">
+                                <div th:text="${comment.writeDate}"></div>
+                            </li>
+                        </div>
+                    </div>
+                    <div th:if="${comment.deleteCheck} == '1'">
+                        <li style="display: flex; align-items: center; height: 100px;">
+                            <span style="color: red; font-size: 20px;">삭제된 댓글입니다.</span>
+                        </li>
+                    </div>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="/js/httpRequest.js"></script>
+<script>
+    function onLoadFunction() {
+        const element = document.getElementById("commentList");
+        element.scrollTop = element.scrollHeight;
+    }
+    document.addEventListener("DOMContentLoaded", onLoadFunction);
+</script>
+<script th:inline="javascript">
+//////////////////////////////////////////////////////스터디 신청//////////////////////////////////////////////////////////
+    function mentorRequest() {
+        let idx = [[${recruitMentor.idx}]];
+        let emailId = [[${emailId}]];
+        let nickname = [[${nickname}]];
+        let url = "/recruitmentorlist/post/apply";
+        let param = "writer=" + [[${recruitMentor.writer}]] +
+                    "&emailId=" + emailId +
+                    "&nickname=" + nickname +
+                    "&recruitMentorIdx=" + idx;
+        sendRequest(url, param, mentorRequestRes, "GET");
+    }
+    function mentorRequestRes() {
+        if ( xhr.readyState == 4 && xhr.status == 200 ) {
+            var data = xhr.responseText;
+            if(data == 'no'){
+                alert("멘토 구하기 신청 실패");
+                return;
+            } else if(data == 'exist'){
+                alert("멘토 구하기 신청 중복");
+            } else {
+                alert("멘토 구하기 신청 성공");
+            }
+        }
+    }
+//////////////////////////////////////////////////////스터디 신청//////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////댓글 수정///////////////////////////////////////////////////////////
+    function commentModify(f){
+        let idx = f.idx.value;
+        let comment = f.comment.value;
+        const TIME_ZONE = 3240 * 10000; // 현재 시간을 설정하는 변수
+        let today = new Date(+new Date() + TIME_ZONE).toISOString().split('T')[0];
+        if(comment == ''){
+            alert("내용을 작성하세요");
+            return;
+        }
+        let url = "/recruitmentorlist/post/comment/modify"
+        let param = "idx=" + idx +
+                    "&comment=" + encodeURIComponent(comment) +
+                    "&writeDate=" + today;
+        sendRequest(url, param, commentModifyRes, "GET");
+    }
+    function commentModifyRes(){
+        if ( xhr.readyState == 4 && xhr.status == 200 ) {
+            var data = xhr.responseText;
+            if(data == 'no'){
+                alert("댓글 수정 실패");
+                return;
+            } else {
+                alert("댓글 수정 완료");
+                location.reload();
+            }
+        }
+    }
+
+    function commentModifyForm(f) {
+        alert("내용을 변경해주세요");
+        f.comment.readOnly = false;
+        f.comment.value = "";
+        f.modify.style.display = "inline";
+        f.beforeModify.style.display = "none";
+    }
+//////////////////////////////////////////////////////댓글 수정///////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////댓글 삭제///////////////////////////////////////////////////////////
+    function commentDelete(f) {
+        let idx = f.idx.value;
+        let url = "/recruitmentorlist/post/comment/delete"
+        let param = "idx=" + idx;
+        sendRequest(url, param, deleteRes, "GET");
+    }
+    function deleteRes(){
+        if ( xhr.readyState == 4 && xhr.status == 200 ) {
+            var data = xhr.responseText;
+            if(data == 'no'){
+                alert("댓글 삭제 실패");
+                return;
+            } else {
+                alert("댓글 삭제 완료");
+                location.reload();
+            }
+        }
+    }
+//////////////////////////////////////////////////////댓글 삭제///////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////댓글 작성///////////////////////////////////////////////////////////
+    function writeComment() {
+        const TIME_ZONE = 3240 * 10000; // 현재 시간을 설정하는 변수
+        let today = new Date(+new Date() + TIME_ZONE).toISOString().split('T')[0];
+        let idx = document.getElementById("idx").value;
+        let comment = document.getElementById("comment").value;
+        let url = "/recruitmentorlist/post/comment"
+        let param = "commentIdx=" + idx +
+                    "&writeDate=" + today +
+                    "&writer=" + [[${nickname}]] +
+                    "&comment=" + encodeURIComponent(comment);
+        sendRequest(url, param, commentRes, "GET");
+    }
+    function commentRes(){
+        if ( xhr.readyState == 4 && xhr.status == 200 ) {
+            var data = xhr.responseText;
+            if(data == 'no'){
+                alert("댓글 작성 실패");
+                return;
+            } else {
+                alert("댓글 작성 완료");
+                location.reload();
+            }
+        }
+    }
+//////////////////////////////////////////////////////댓글 작성///////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////게시글 삭제//////////////////////////////////////////////////////////
+    function writeDelete() {
+        let idx = document.getElementById("idx").value;
+        let url = "/recruitmentorlist/post/delete";
+        let param = "idx=" + idx;
+        sendRequest(url, param, deleteMentor, "GET");
+    }
+    function deleteMentor() {
+        if ( xhr.readyState == 4 && xhr.status == 200 ) {
+            var data = xhr.responseText;
+            if(data == 'no'){
+                alert("삭제실패");
+                return;
+            } else {
+                alert("삭제 성공");
+                location.href="/recruitmentorlist";
+            }
+        }
+    }
+//////////////////////////////////////////////////////게시글 삭제//////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////게시글 좋아요/////////////////////////////////////////////////////////
+    function like(f){
+        let studyLike = parseInt(f.studyLike.value);
+        let idx = document.getElementById("idx").value;
+        let url = "/recruitmentorlist/post/like";
+        param = "&studyLike=" + studyLike +
+                "&likeIdx=" + idx +
+                "&memberIdx=" + [[${memberIdx}]] +
+                "&emailId=" + [[${emailId}]] +
+                "&recruitMentorIdx=" + idx +
+                "&nickname=" + [[${nickname}]];
+        sendRequest(url, param, likeRes, "GET");
+    }
+    function likeRes(){
+        let studyLikeCheck = document.getElementById("studyLikeCheck");
+        let studyLike = document.getElementById("studyLike");
+        let studyLikeView = document.getElementById("studyLikeView");
+        if ( xhr.readyState == 4 && xhr.status == 200 ) {
+            var data = xhr.responseText;
+            if(data == "no") {
+
+            } else {
+                if(studyLikeCheck.value == '0') {
+                    alert('좋아요');
+                    studyLikeCheck.value += 1;
+                    studyLikeView.innerHTML = data;
+                } else {
+                    alert('좋아요 취소');
+                    studyLikeCheck.value -= 1;
+                    studyLikeView.innerHTML = data;
+                }
+            }
+        }
+    }
+//////////////////////////////////////////////////////게시글 좋아요/////////////////////////////////////////////////////////
+</script>
+</html>

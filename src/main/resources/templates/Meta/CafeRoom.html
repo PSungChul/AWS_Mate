@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>카페</title>
+    <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-neo.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/css/MetaChatRoom.css">
+    <style>
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+
+    <script th:inline="javascript">
+        let err = [[${err}]];
+        if ( err != null ) {
+            alert("알수없는 이유로 방이 터졌습니다.\n방을 재생성 해주시기 바랍니다.");
+            location.href = "/meta";
+        }
+    </script>
+</head>
+<!-- unload - beforeunload 이벤트에서 반환한 값을 처리한다. -->
+<body onkeydown="keyDown()" onkeyup="keyUp()" onunload="exit()">
+    <!-- 방 제목 구역 -->
+    <header class="roomInfo" id="titleArea">
+        <b id="title" th:text="'방 번호 : ' + ${metaRoom.idx} + '    |    ' + '(카페)' + ' 방 제목 : ' + ${metaRoom.metaTitle} + ' ( ' + ${metaRoom.metaRecruitingPersonnel} + ' / ' + ${metaRoom.metaPersonnel} + ' )'"></b>
+    </header>
+
+    <section class="container">
+        <!-- 상단 구역 -->
+        <nav class="topNav">
+            <!-- 상단 왼쪽 참가자 구역 -->
+            <div class="topLeftMember" id="profileArea">
+                <!-- 참가자 코드 -->
+                <div class="participant participantDiv" th:each="participant : ${participantList}" th:id="${participant.metaNickname}">
+                    <img class="participantImg" th:src="@{/imagePath/} + ${participant.metaProfileImage}">
+                    <div class="participantInfo">
+                        <b class="participantNickname" th:text="${participant.metaNickname}"></b>
+                        <b class="participantMaster" th:if="${participant.metaNickname == metaRoom.metaMaster}">방장</b>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상단 오른쪽 메뉴바 구역 -->
+            <div class="topRightMenu">
+                <input class="menuBarExitBtn" type="button" value="나가기" th:onclick="|location.href='@{/meta/selfexit(idx = ${metaRoom.idx}, nickname = ${nickImage.nickname})}'|">
+            </div>
+        </nav>
+
+        <!-- 중단 구역 -->
+        <div class="middleMeta">
+            <!-- 메타버스 -->
+            <canvas class="metaCanvas" id="canvas"></canvas>
+
+            <!-- 상세 프로필과 채팅 -->
+            <div class="detailProfileAndChatArea">
+                <!-- 상세 프로필 구역 -->
+                <div class="detailProfile" id="detailProfileArea">
+                    <b class="detailProfileCloseBtn" id="btnDetailProfileClose">X</b>
+                    <!-- 상세 프로필 사진 구역 -->
+                    <!-- 공통 구역 -->
+                    <div class="detailProfileImageArea">
+                        <img class="detailProfileImage" id="detailProfileImage">
+                    </div>
+                    <!-- 프로필 닉네임 구역 -->
+                    <div class="detailProfileNicknameArea" id="detailProfileNicknameArea">
+                        <!-- 공통 구역 -->
+                        <b id="detailProfileNickname"></b>
+                    </div>
+                </div>
+
+                <!-- 채팅 구역 -->
+                <div class="chatAreaDiv" id="chatArea">
+                    <div class="chatTitle">채팅</div><br>
+                </div>
+            </div>
+        </div>
+
+        <!-- 하단 구역 -->
+        <div class="bottomArea">
+            <!-- 녹음 구역 -->
+            <div class="recordArea" id="recordArea">
+                <audio class="recordPlayer" id="record" controls></audio>
+                <input class="recordBtn" id="btnRecordStart" type="button" value="녹음 시작">
+                <input class="recordBtn" id="btnRecordStop" type="button" value="녹음 정지" disabled>
+                <input class="recordBtn" id="btnRecordSend" type="button" value="녹음 전송" disabled>
+            </div>
+
+            <!-- 메시지 입력란 -->
+            <div class="messageArea">
+                <input class="message" id="message" type="text" placeholder = "채팅 입력란">
+                <input class="messageSendBtn" id="btnSend" type="button" value="보내기" onclick="send()">
+            </div>
+        </div>
+    </section>
+<!-------------------------------------------------------js 구역-------------------------------------------------------->
+    <!-- SockJS 사용을 위한 js를 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <!-- Stomp 사용을 위한 js를 추가 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <!-- Ajax 사용을 위한 js를 추가 -->
+    <script src="/js/httpRequest.js"></script>
+
+    <!---------------------------------------------------- 채팅 구역 ----------------------------------------------------->
+    <script th:inline="javascript">
+        //////////////////////////////////////////////////// 변수 구역 ////////////////////////////////////////////////////
+        var metaIdx = [[${metaRoom.idx}]]; // 방 번호
+        var metaTitle = [[${metaRoom.metaTitle}]]; // 방 제목
+        var metaRecruitingPersonnel = [[${metaRoom.metaRecruitingPersonnel}]]; // 참여중인 인원
+        var metaPersonnel = [[${metaRoom.metaPersonnel}]]; // 모집인원
+        var metaMaster = [[${metaRoom.metaMaster}]]; // 방장 닉네임
+        var metaNickname = [[${nickImage.nickname}]]; // 로그인 유저 닉네임
+        var metaProfileImage = [[${nickImage.profileImage}]]; // 로그인 유저의 프로필 사진
+        // Date.now() - UTC 기준으로 1970년 1월 1일 0시 0분 0초부터 현재까지 경과된 밀리 초를 반환한다.
+        let start = ""; // 시작 시간
+        let end = ""; // 메시지 전송 시간
+        let count = ""; // 전송된 메시지 수
+        let sendMessage = ""; // 메시지 전송 상태
+        let message = document.getElementById("message"); // 메시지 작성란
+        let entryCheck = [[${entryCheck}]]; // 입장 체크값
+        let localStorage = window.localStorage; // 로컬 스토리지 객체 생성
+    </script>
+    <script src="/js/CafeRoom.js"></script>
+
+    <!--------------------------------------------------- 캔버스 구역 ---------------------------------------------------->
+    <script th:inline="javascript">
+        //////////////////////////////////////////////////// 변수 구역 ////////////////////////////////////////////////////
+        var canvasMetaIdx = [[${metaRoom.idx}]]; // 방 번호
+        var canvasNickname = [[${nickImage.nickname}]]; // 로그인 유저 닉네임
+        var canvasProfileImage = [[${nickImage.profileImage}]]; // 로그인 유저의 프로필 사진
+        let canvasEntryCheck = [[${entryCheck}]]; // 입장 체크값
+
+        let canvas; // 도화지
+        let canvasLeft; // 왼쪽 벽
+        let canvasTop; // 위쪽 벽
+        let canvasRight; // 오른쪽 벽
+        let canvasBottom; // 아래쪽 벽
+        let context; // 화가
+        let imgC = "imgChar2"; // 그림 이름 받는곳
+
+        let serverCharacters; // 캐릭터 Map - 서버로 보내기용
+        let canvasCharacters; // 캐릭터 Map 파싱 - 캔버스에 그리기용
+        let character; // 캐릭터 Map의 닉네임 키
+        let coordinate; // 캐릭터 Map의 닉네임 키에 해당하는 List 값
+
+        let keycode; // 키보드 키코드
+
+        let imgChar = new Image(); // 캐릭터 이미지
+        let imgBg = new Image(); // 배경 이미지
+        imgBg.src = "/map/cafeRoom.png"; // 배경 이미지 주소
+
+        // id를 통해 캔버스의 너비를 가져와 cw 변수에 전달한다.
+        // clientWidth 속성은 패딩을 포함하지만 테두리나 마진은 포함하지 않는 요소의 내부 너비를 픽셀 단위로 반환한다.
+        let cw = document.getElementById("canvas").clientWidth;
+        // id를 통해 캔버스의 높이를 가져와 ch 변수에 전달한다.
+        // clientHeight 속성은 패딩을 포함하지만 테두리나 마진은 포함하지 않는 요소의 내부 높이를 픽셀 단위로 반환한다.
+        let ch = document.getElementById("canvas").clientHeight;
+
+        let x; // 캐릭터 x좌표 위치
+        let y; // 캐릭터 y좌표 위치
+        let w = 20; // 캐릭터 너비 (전체 사이즈의 절반만 작성)
+        let h = 20; // 캐릭터 높이 (전체 사이즈의 절반만 작성)
+    </script>
+    <script src="/js/CafeRoomCanvas.js"></script>
+</body>
+</html>
