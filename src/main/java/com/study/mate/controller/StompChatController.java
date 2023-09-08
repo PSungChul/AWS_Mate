@@ -79,10 +79,10 @@ public class StompChatController {
     @MessageMapping(value = "/meta/studyroom/enter")
     public void enterStudyRoom(ChatMessageDTO message) { // 1. 클라이언트로부터 전송된 첫 입장 정보들을 DTO로 받아온다.
         // 2. 1에서 파라미터로 받아온 DTO 값 중 방 번호 키로, 퇴장 메소드에서 방장 재입장 체크용 Map에 추가한 방 번호 키에 해당하는 방장 닉네임 값을 가져온다.
-        String  reEnterCheck = boomMetaRoom.get(message.getMetaIdx());
+        String reEnterCheck = boomMetaRoom.get(message.getMetaIdx());
         // 3. 2에서 가져온 방장 닉네임 값이 존재하는지 체크한다.
         // 3-1. 방장 닉네임 값이 존재하는 경우 - 방장이 퇴장한 지 1분 경과 전 유저 첫 입장
-        if ( boomMetaRoom.get(message.getMetaIdx()) != null ) {
+        if ( reEnterCheck != null ) {
             // 3-1-1. 2에서 가져온 방장 닉네임 값이 작성자와 같을 경우 - 방장이 퇴장한 지 1분 경과 전 방장 재입장
             if ( boomMetaRoom.get(message.getMetaIdx()).equals(message.getWriter()) ) {
                 // 3-1-1-1. 퇴장 메소드에서 방장 재입장 체크용 Map에 추가한 방 번호 키에 해당하는 방장 닉네임 값을 제거한다.
@@ -737,10 +737,10 @@ public class StompChatController {
     @MessageMapping(value = "/meta/caferoom/enter")
     public void enterCafeRoom(ChatMessageDTO message) { // 1. 클라이언트로부터 전송된 첫 입장 정보들을 DTO로 받아온다.
         // 2. 1에서 파라미터로 받아온 DTO 값 중 방 번호 키로, 퇴장 메소드에서 방장 재입장 체크용 Map에 추가한 방 번호 키에 해당하는 방장 닉네임 값을 가져온다.
-        String  reEnterCheck = boomMetaRoom.get(message.getMetaIdx());
+        String reEnterCheck = boomMetaRoom.get(message.getMetaIdx());
         // 3. 2에서 가져온 방장 닉네임 값이 존재하는지 체크한다.
         // 3-1. 방장 닉네임 값이 존재하는 경우 - 방장이 퇴장한 지 1분 경과 전 유저 첫 입장
-        if ( boomMetaRoom.get(message.getMetaIdx()) != null ) {
+        if ( reEnterCheck != null ) {
             // 3-1-1. 2에서 가져온 방장 닉네임 값이 작성자와 같을 경우 - 방장이 퇴장한 지 1분 경과 전 방장 재입장
             if ( boomMetaRoom.get(message.getMetaIdx()).equals(message.getWriter()) ) {
                 // 3-1-1-1. 퇴장 메소드에서 방장 재입장 체크용 Map에 추가한 방 번호 키에 해당하는 방장 닉네임 값을 제거한다.
